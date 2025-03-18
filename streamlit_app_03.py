@@ -34,7 +34,7 @@ def process_pdf_directory(directory):
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to:", ["📄 PDF to Markdown Converter", "📚 Document Embedding"])
+page = st.sidebar.radio("Go to:", ["PDF to Markdown Converter", "Document Embedding"])
 
 # Page 1: PDF to Markdown Converter
 if page == "PDF to Markdown Converter":
