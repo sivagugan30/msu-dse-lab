@@ -134,7 +134,7 @@ elif page == "Document Embedding":
 
 """
 
-streamlit run /Users/sivaguganjayachandran/PycharmProjects/SSL/streamlit_app_03.py
+Developed by DSE Lab, Michigan State University
 
 """
 
