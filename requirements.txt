@@ -3,3 +3,5 @@ streamlit
 scikit-learn
 numpy
 langchain
+llama_index
+pathlib
