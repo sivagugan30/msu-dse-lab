@@ -37,8 +37,8 @@ st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to:", ["📄 PDF to Markdown Converter", "📚 Document Embedding"])
 
 # Page 1: PDF to Markdown Converter
-if page == "📄 PDF to Markdown Converter":
-    st.title("📄 PDF to Markdown Converter")
+if page == "PDF to Markdown Converter":
+    st.title("PDF to Markdown Converter")
 
     option = st.radio("Select input type:", ["Upload PDF", "Directory Path"])
 
@@ -82,9 +82,9 @@ if page == "📄 PDF to Markdown Converter":
                 st.warning("No PDFs found in the directory.")
 
 # Page 2: Document Embedding Page
-elif page == "📚 Document Embedding":
+elif page == "Document Embedding":
 
-    st.title("📚 Document Embedding Page")
+    st.title("Document Embedding Page")
     st.markdown("""
         Upload documents to create a custom knowledge base for the chatbot.  
         **NOTE:** You can either add documents to an **existing collection** or create a **new collection**.
@@ -129,7 +129,7 @@ elif page == "📚 Document Embedding":
         # Display Uploaded Files
         if save_button and document:
             st.success(
-                f"✅ Saved {len(document)} documents in collection: {collection_name} using {embedding_model} | Chunk Size: {chunk_size} | Overlap: {chunk_overlap}")
+                f"Saved {len(document)} documents in collection: {collection_name} using {embedding_model} | Chunk Size: {chunk_size} | Overlap: {chunk_overlap}")
 
 
 """
