@@ -3,6 +3,11 @@ import streamlit as st
 from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
 
+from default.config import [
+    document_list,
+    collection_list
+]
+
 # Function to Convert PDF to Markdown
 def convert_pdf_to_markdown(pdf_path):
     """Converts a single PDF file to Markdown format."""
@@ -34,7 +39,7 @@ def process_pdf_directory(directory):
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to:", ["PDF to Markdown Converter", "Document Embedding"])
+page = st.sidebar.radio("Go to:", ["PDF to Markdown Converter", "Document Embedding","Chatbot"])
 
 # Page 1: PDF to Markdown Converter
 if page == "PDF to Markdown Converter":
@@ -130,6 +135,47 @@ elif page == "Document Embedding":
         if save_button and document:
             st.success(
                 f"Saved {len(document)} documents in collection: {collection_name} using {embedding_model} | Chunk Size: {chunk_size} | Overlap: {chunk_overlap}")
+
+
+
+if page == 'Chatbot':
+    with st.sidebar:
+        collection_name = st.selectbox(
+            "Select your document collection",
+            collection_list
+        )
+
+        document_name = st.selectbox(
+            "Select your document",
+            document_list[collection_name]
+        )
+
+    st.write(f"Selected Collection: {collection_name}")
+    st.write(f"Selected Document: {document_name}")
+
+    with st.sidebar:
+        with st.expander("⚙️ RAG Parameters"):
+            num_source = st.slider(
+                "Top N sources to view:", min_value=4, max_value=20, value=5, step=1
+            )
+            flag_mmr = st.toggle(
+                "Diversity search",
+                value=True,
+                help="Diversity search, i.e., Maximal Marginal Relevance (MMR) tries to reduce redundancy of fetched documents and increase diversity. 0 being the most diverse, 1 being the least diverse. 0.5 is a balanced state.",
+            )
+            _lambda_mult = st.slider(
+                "Diversity parameter (lambda):",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.5,
+                step=0.25,
+            )
+            flag_similarity_out = st.toggle(
+                "Output similarity score",
+                value=False,
+                help="The retrieval process may become slower due to the cosine similarity calculations. A similarity score of 100% indicates the highest level of similarity between the query and the retrieved chunk.",
+            )
+
 
 
 """
