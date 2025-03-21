@@ -168,6 +168,7 @@ if page == 'Chatbot':
         document_name = st.selectbox(
             "Select your document",
             document_list[collection_name]
+        )
 
 
     with st.sidebar:
