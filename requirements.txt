@@ -5,3 +5,4 @@ numpy
 langchain
 llama_index
 pathlib
+langchain-community
