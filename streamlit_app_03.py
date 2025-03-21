@@ -174,6 +174,10 @@ if page == 'Chatbot':
                 help="The retrieval process may become slower due to the cosine similarity calculations. A similarity score of 100% indicates the highest level of similarity between the query and the retrieved chunk.",
             )
 
+    if user_query := st.chat_input(
+        placeholder="What is your question on the selected collection/document?"
+    ):
+
 
 
 """
