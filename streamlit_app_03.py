@@ -123,7 +123,7 @@ elif page == "Document Embedding":
         )
 
         # Document Collection Selection
-        existing_collections = ["Phoenix 1","Phoenix 2","Phoenix 3"]
+        existing_collections = ["Undergraduate_Chemistry","Middle and High School_Chemistry"]
 
         collection_name = st.selectbox(
             "Select Existing Collection or Create New",
