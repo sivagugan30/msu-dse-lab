@@ -177,6 +177,8 @@ if page == 'Chatbot':
     if user_query := st.chat_input(
         placeholder="What is your question on the selected collection/document?"
     ):
+        with tab:
+            st.chat_message("user").write(user_query)
 
 
 
