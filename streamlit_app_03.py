@@ -162,15 +162,12 @@ if page == 'Chatbot':
     with st.sidebar:
         collection_name = st.selectbox(
             "Select your document collection",
-            collection_list + ['All'],
-            index=len(collection_list)  # Set the default to the last item, which is "All"
+            collection_list
         )
-    
+
         document_name = st.selectbox(
             "Select your document",
-            document_list[collection_name] + ['All'],
-            index=len(document_list[collection_name])  # Set the default to the last item, which is "All"
-        )
+            document_list[collection_name]
 
 
     with st.sidebar:
