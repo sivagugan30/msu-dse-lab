@@ -150,8 +150,6 @@ if page == 'Chatbot':
             document_list[collection_name]
         )
 
-    st.write(f"Selected Collection: {collection_name}")
-    st.write(f"Selected Document: {document_name}")
 
     with st.sidebar:
         with st.expander("⚙️ RAG Parameters"):
