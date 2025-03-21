@@ -3,10 +3,10 @@ import streamlit as st
 from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
 
-from default.config import [
+from default.config import (
     document_list,
     collection_list
-]
+)
 
 # Function to Convert PDF to Markdown
 def convert_pdf_to_markdown(pdf_path):
