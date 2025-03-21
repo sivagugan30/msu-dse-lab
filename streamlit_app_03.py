@@ -136,9 +136,19 @@ elif page == "Document Embedding":
             st.success(
                 f"Saved {len(document)} documents in collection: {collection_name} using {embedding_model} | Chunk Size: {chunk_size} | Overlap: {chunk_overlap}")
 
-
+def setup_memory():
+    msgs = StreamlitChatMessageHistory()
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        chat_memory=msgs,
+        return_messages=True,
+    )
+    return msgs, memory
 
 if page == 'Chatbot':
+
+    st.title("RAG Chatbot")
+    
     with st.sidebar:
         collection_name = st.selectbox(
             "Select your document collection",
@@ -180,7 +190,10 @@ if page == 'Chatbot':
         with tab:
             st.chat_message("user").write(user_query)
 
-
+    msgs, memory = setup_memory()
+    
+    msgs.clear()
+    msgs.add_ai_message("Welcome to life actuarial document Q&A machine!")
 
 """
 
