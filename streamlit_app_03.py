@@ -3,6 +3,9 @@ import streamlit as st
 from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
 
+from langchain_community.chat_message_histories import StreamlitChatMessageHistory
+
+
 from default.config import (
     document_list,
     collection_list
