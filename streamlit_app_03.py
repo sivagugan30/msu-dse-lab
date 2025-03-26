@@ -75,7 +75,10 @@ if page == "PDF to Markdown Converter":
                 mime="text/markdown"
             )
 
-            os.remove(temp_path)  # Cleanup
+            os.remove(temp_path)  # Cleanup 1
+
+
+            print("New commit : mar 26 ")
 
     elif option == "Directory Path":
         directory_path = st.text_input("Enter directory path containing PDFs")
