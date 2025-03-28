@@ -198,13 +198,14 @@ if page == 'Chatbot':
 
         # Construct the prompt for the LLM
         prompt = f"""
-                    Based on the retrieved documents and user query, generate a response.
+                    Based on the retrieved documents and user query, generate a response with the 'metadata'
 
                     Query: " {user_input} "
 
                     Top results:
                     {results['documents']}
                     {results['metadata']}
+                   
                    If the context does not provide enough information, reply by saying : 'Please note that the current sources available to RAG are limited to indexed PDFs, so there may not be specific information related to your query. Apologies'  
                 """
 
