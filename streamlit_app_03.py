@@ -15,10 +15,23 @@ from langchain.chains import ConversationalRetrievalChain
 #from pinecone import Pinecone
 import pandas as pd
 
+from openai import OpenAI
+
 from default.config import (
     document_list,
     collection_list
 )
+
+import default.custom_functions as cf
+
+import json, os
+
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
+json_files = ['json/Middle and High School_Chemistry/' + f for f in os.listdir('json/Middle and High School_Chemistry') if f.endswith('.json')]
 
 # Function to Convert PDF to Markdown
 def convert_pdf_to_markdown(pdf_path):
@@ -219,22 +232,63 @@ if page == 'Chatbot':
                 help="The retrieval process may become slower due to the cosine similarity calculations. A similarity score of 100% indicates the highest level of similarity between the query and the retrieved chunk.",
             )
 
-    if user_query := st.chat_input(
-        placeholder="What is your question on the selected collection/document?"
-    ):
-        with tab:
-            st.chat_message("user").write(user_query)
 
-    msgs, memory = setup_memory()
-    
-    msgs.clear()
-    msgs.add_ai_message("Welcome to life actuarial document Q&A machine!")
+    # Initialize session state for conversation history
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+
+    # User input for the query
+    user_input = st.chat_input("Ask me anything about the indexed documents!")
+
+    if user_input:
+        # Add the user input to the conversation history
+        st.session_state.messages.append({"role": "user", "content": user_input})
+
+        # Process the input to get a response from the model
+        vector_dict = cf.load_json_files(json_files)
+        query_embeddings = cf.generate_query_embeddings(user_input)
+
+        # Retrieve top results based on the query embeddings
+        results = cf.query_vector_dict(vector_dict, query_embeddings=query_embeddings, n_results=3)
+
+        # Construct the prompt for the LLM
+        prompt = f"""
+                    Based on the retrieved documents and user query, generate a response.
+
+                    Query: " {user_input} "
+
+                    Top results:
+                    {results['documents']}
+                    {results['metadata']}
+                   If the context does not provide enough information, reply by saying : 'Please note that the current sources available to RAG are limited to indexed PDFs, so there may not be specific information related to your query. Apologies'  
+                """
+
+        try:
+            # Make the request to OpenAI to get the response
+            reply = OpenAI().chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "developer", "content": "You are a helpful assistant"},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            # Display the response
+            assistant_reply = reply.choices[0].message.content
+            st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+
+        except Exception as e:
+            st.session_state.messages.append({"role": "assistant", "content": f"Error generating response: {e}"})
+    # Display chat history
+    for message in st.session_state.messages:
+        if message['role'] == "user":
+            st.chat_message("user").markdown(message['content'])
+        else:
+            st.chat_message("assistant").markdown(message['content'])
 
 """
 
 Developed by DSE Lab, Michigan State University
-
-
 
 """
 
