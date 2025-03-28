@@ -2,15 +2,17 @@ import os
 import streamlit as st
 from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
+import zipfile
+from io import BytesIO
 
-from langchain_community.chat_models import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
+#from langchain_community.chat_models import ChatOpenAI
+#from langchain_anthropic import ChatAnthropic
 from langchain.memory import ConversationBufferMemory
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain.chains import ConversationalRetrievalChain
-from langchain_openai import OpenAIEmbeddings
-from langchain_pinecone import PineconeVectorStore
-from pinecone import Pinecone
+#from langchain_openai import OpenAIEmbeddings
+#from langchain_pinecone import PineconeVectorStore
+#from pinecone import Pinecone
 import pandas as pd
 
 from default.config import (
@@ -78,7 +80,7 @@ if page == "PDF to Markdown Converter":
             os.remove(temp_path)  # Cleanup 1
 
 
-            print("New commit : mar 26 ")
+            print("New commit : mar 27 ")
 
     elif option == "Directory Path":
         directory_path = st.text_input("Enter directory path containing PDFs")
@@ -87,6 +89,26 @@ if page == "PDF to Markdown Converter":
             markdown_files = process_pdf_directory(directory_path)
 
             if markdown_files:
+                # Create a ZIP file in memory
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                    for filename, content in markdown_files.items():
+                        zip_file.writestr(filename, content)
+
+                # Offer the ZIP file for download first
+                zip_buffer.seek(0)
+                st.markdown("---")
+                st.download_button(
+                    "Download All as ZIP",
+                    zip_buffer,
+                    file_name= directory_path.split('/')[-1] + "(markdown).zip",
+                    mime="application/zip"
+                )
+
+                # Add a newline for better spacing
+                st.markdown("---")
+
+                # Display individual markdown files with download options
                 for filename, content in markdown_files.items():
                     st.subheader(filename)
                     st.text_area(f"Content of {filename}", content, height=200)
@@ -211,6 +233,8 @@ if page == 'Chatbot':
 """
 
 Developed by DSE Lab, Michigan State University
+
+
 
 """
 
