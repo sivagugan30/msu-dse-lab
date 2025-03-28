@@ -177,42 +177,6 @@ elif page == "Document Embedding":
 if page == 'Chatbot':
 
     st.title("RAG Chatbot")
-    
-    with st.sidebar:
-        collection_name = st.selectbox(
-            "Select your document collection",
-            collection_list
-        )
-
-        document_name = st.selectbox(
-            "Select your document",
-            document_list[collection_name]
-        )
-
-
-    with st.sidebar:
-        with st.expander("⚙️ RAG Parameters"):
-            num_source = st.slider(
-                "Top N sources to view:", min_value=4, max_value=20, value=5, step=1
-            )
-            flag_mmr = st.toggle(
-                "Diversity search",
-                value=True,
-                help="Diversity search, i.e., Maximal Marginal Relevance (MMR) tries to reduce redundancy of fetched documents and increase diversity. 0 being the most diverse, 1 being the least diverse. 0.5 is a balanced state.",
-            )
-            _lambda_mult = st.slider(
-                "Diversity parameter (lambda):",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.5,
-                step=0.25,
-            )
-            flag_similarity_out = st.toggle(
-                "Output similarity score",
-                value=False,
-                help="The retrieval process may become slower due to the cosine similarity calculations. A similarity score of 100% indicates the highest level of similarity between the query and the retrieved chunk.",
-            )
-
 
     # Initialize session state for conversation history
     if 'messages' not in st.session_state:
@@ -266,6 +230,42 @@ if page == 'Chatbot':
             st.chat_message("user").markdown(message['content'])
         else:
             st.chat_message("assistant").markdown(message['content'])
+
+
+    with st.sidebar:
+        collection_name = st.selectbox(
+            "Select your document collection",
+            collection_list
+        )
+
+        document_name = st.selectbox(
+            "Select your document",
+            document_list[collection_name]
+        )
+
+
+    with st.sidebar:
+        with st.expander("⚙️ RAG Parameters"):
+            num_source = st.slider(
+                "Top N sources to view:", min_value=4, max_value=20, value=5, step=1
+            )
+            flag_mmr = st.toggle(
+                "Diversity search",
+                value=True,
+                help="Diversity search, i.e., Maximal Marginal Relevance (MMR) tries to reduce redundancy of fetched documents and increase diversity. 0 being the most diverse, 1 being the least diverse. 0.5 is a balanced state.",
+            )
+            _lambda_mult = st.slider(
+                "Diversity parameter (lambda):",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.5,
+                step=0.25,
+            )
+            flag_similarity_out = st.toggle(
+                "Output similarity score",
+                value=False,
+                help="The retrieval process may become slower due to the cosine similarity calculations. A similarity score of 100% indicates the highest level of similarity between the query and the retrieved chunk.",
+            )
 
 """
 
