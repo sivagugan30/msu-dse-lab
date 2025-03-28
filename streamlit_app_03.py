@@ -1,19 +1,8 @@
-import os
 import streamlit as st
 from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
 import zipfile
 from io import BytesIO
-
-#from langchain_community.chat_models import ChatOpenAI
-#from langchain_anthropic import ChatAnthropic
-from langchain.memory import ConversationBufferMemory
-from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-from langchain.chains import ConversationalRetrievalChain
-#from langchain_openai import OpenAIEmbeddings
-#from langchain_pinecone import PineconeVectorStore
-#from pinecone import Pinecone
-import pandas as pd
 
 from openai import OpenAI
 
@@ -184,14 +173,6 @@ elif page == "Document Embedding":
             st.success(
                 f"Saved {len(document)} documents in collection: {collection_name} using {embedding_model} | Chunk Size: {chunk_size} | Overlap: {chunk_overlap}")
 
-def setup_memory():
-    msgs = StreamlitChatMessageHistory()
-    memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        chat_memory=msgs,
-        return_messages=True,
-    )
-    return msgs, memory
 
 if page == 'Chatbot':
 
