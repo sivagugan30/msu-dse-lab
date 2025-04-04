@@ -13,25 +13,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 
-# Set background image or color dynamically based on the page
-def set_background(image_path):
-    with open(image_path, "rb") as image_file:
-        base64_image = base64.b64encode(image_file.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/png;base64,{base64_image}");
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-
 # Function to load and process JSON data from files
 def load_json_files(json_files):
     ids = []
@@ -87,8 +68,76 @@ def generate_query_embeddings(query_text):
     query_embeddings = np.array(query_embeddings).reshape(1, -1)
     return query_embeddings
 
+def query_vector_dict(vector_dict, query_params):
 
-def query_vector_dict(vector_dict, query_texts=None, query_embeddings=None, n_results=3, where=None,
+    new_dict = {
+        'metadata' : [],
+        'ids' : [],
+        'embeddings' : [],
+        'documents' : []
+    }
+
+    pdf_key_1 = query_params['pdf_name'] is not None
+    collection_key_1 = query_params['document_collection_name'] is not None
+
+    #filter knowledge base basis user parameters
+    for i in range(len(vector_dict['ids'])):
+        metadata = vector_dict['metadata'][i]
+
+        pdf_key_2 = not pdf_key_1 or metadata['pdf_name'] == query_params['pdf_name']
+        collection_key_2 = not collection_key_1 or metadata['document_collection_name'] == query_params['document_collection_name']
+
+        if pdf_key_2 and collection_key_2 :
+            new_dict['metadata'].append(vector_dict['metadata'][i])
+            new_dict['ids'].append(vector_dict['ids'][i])
+            new_dict['embeddings'].append(vector_dict['embeddings'][i])
+            new_dict['documents'].append(vector_dict['documents'][i])
+
+    #calculate similarity score and MMR(maximal marginal relevance) to fetch top_n documents
+    l = query_params['diversity'] #lambda
+
+    if query_params['top_n'] <= len(new_dict['ids']):
+        top_n = query_params['top_n']
+    else:
+        top_n = len(new_dict['ids'])
+
+    similarities = cosine_similarity(query_params['query_embeddings'], new_dict['embeddings'])
+    mmr = l * similarities - (1 - l) * similarities.max(axis=1, keepdims=True)
+
+    indices = np.argsort(mmr)[:,::-1][:,:top_n]
+
+    final_dict = {
+        'metadata' : [],
+        'ids' : [],
+        #'embeddings' : [],
+        'documents' : []
+    }
+
+    #create final doct basis relevant and diverse indices
+    for i in indices[0]:
+        final_dict['metadata'].append(new_dict['metadata'][i])
+        final_dict['ids'].append(new_dict['ids'][i])
+        #final_dict['embeddings'].append(new_dict['embeddings'][i])
+        final_dict['documents'].append(new_dict['documents'][i])
+
+    return final_dict
+
+def get_dict_list(vector_dict):
+    result_dict = {}
+
+    for metadata in vector_dict['metadata']:
+        collection_name = metadata['document_collection_name']
+        pdf_name = metadata['pdf_name']
+
+        if collection_name not in result_dict:
+            result_dict[collection_name] = []
+
+        if pdf_name not in result_dict[collection_name]:
+            result_dict[collection_name].append(pdf_name)
+
+    return result_dict
+
+def query_vector_dict2(vector_dict, query_texts=None, query_embeddings=None, n_results=3, where=None,
                       where_document=None, include=["metadatas", "documents", "distances"]):
     """
     Query the vector_dict to find the closest neighbors.

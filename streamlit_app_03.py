@@ -3,7 +3,7 @@ from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
 import zipfile
 from io import BytesIO
-
+import base64
 from openai import OpenAI
 
 from default.config import (
@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 # Load environment variables from the .env file
 load_dotenv()
 
-json_files = ['json/Middle and High School_Chemistry/' + f for f in os.listdir('json/Middle and High School_Chemistry') if f.endswith('.json')]
+json_files = ['json/Middle and High School Chemistry/' + f for f in os.listdir('json/Middle and High School Chemistry') if f.endswith('.json')]
 
 # Function to Convert PDF to Markdown
 def convert_pdf_to_markdown(pdf_path):
@@ -125,7 +125,12 @@ if page == "PDF to Markdown Converter":
 
 # Page 2: Document Embedding Page
 elif page == "Document Embedding":
+    import os
 
+    st.write(os.getcwd())
+
+
+    st.write(os.path.exists("json/Middle and High School_Chemistry/Evaluating3DTasks.pdf"))
     st.title("Document Embedding Page")
     st.markdown("""
         Upload documents to create a custom knowledge base for the chatbot.  
@@ -174,109 +179,139 @@ elif page == "Document Embedding":
                 f"Saved {len(document)} documents in collection: {collection_name} using {embedding_model} | Chunk Size: {chunk_size} | Overlap: {chunk_overlap}")
 
 
+
+
+
+
+
+
 if page == 'Chatbot':
 
     st.title("RAG Chatbot")
 
-    # Initialize session state for conversation history
-    if 'messages' not in st.session_state:
-        st.session_state.messages = []
+    tab1, tab2 = st.tabs(["Chatbot", "PDF Viewer"])
 
-    # User input for the query
-    user_input = st.chat_input("Ask me anything about the indexed documents!")
+    # load the json files
+    vector_dict = cf.load_json_files(json_files)
 
-    if user_input:
-        # Add the user input to the conversation history
-        st.session_state.messages.append({"role": "user", "content": user_input})
+    doc_list  = cf.get_dict_list(vector_dict)
+    with st.sidebar:
+        selected_collection = st.selectbox(
+            "Select your document collection",
+            [*doc_list.keys()]
+        )
 
-        # Process the input to get a response from the model
-        vector_dict = cf.load_json_files(json_files)
-        query_embeddings = cf.generate_query_embeddings(user_input)
-
-        # Retrieve top results based on the query embeddings
-        results = cf.query_vector_dict(vector_dict, query_embeddings=query_embeddings, n_results=3)
-
-        # Construct the prompt for the LLM
-        prompt = f"""
-                    Query: " {user_input} "
-
-                    Top results:
-                        {results['documents']}
-                        
-                    Please mention the Metadata below:
-                        {results['metadata']}
-                   
-                   If the context does not provide enough information, reply by saying : 
-                   'Please note that the current sources available to RAG are limited to indexed PDFs, so there may not be specific information related to your query. Apologies'  
-                """
-
-        try:
-            # Make the request to OpenAI to get the response
-            reply = OpenAI().chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "developer", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": prompt}
-                ]
+        if selected_collection != 'All':
+            selected_document = st.selectbox(
+                "Select your document",
+                doc_list[selected_collection]
             )
 
-            # Display the response
-            assistant_reply = reply.choices[0].message.content
-            st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
-
-        except Exception as e:
-            st.session_state.messages.append({"role": "assistant", "content": f"Error generating response: {e}"})
-    # Display chat history
-    for message in st.session_state.messages:
-        if message['role'] == "user":
-            st.chat_message("user").markdown(message['content'])
-        else:
-            st.chat_message("assistant").markdown(message['content'])
-
-
-    with st.sidebar:
-        collection_name = st.selectbox(
-            "Select your document collection",
-            collection_list
-        )
-
-        document_name = st.selectbox(
-            "Select your document",
-            document_list[collection_name]
-        )
-
-
-    with st.sidebar:
         with st.expander("⚙️ RAG Parameters"):
-            num_source = st.slider(
-                "Top N sources to view:", min_value=4, max_value=20, value=5, step=1
+            top_n = st.slider(
+                "Top N sources to view:", min_value=1, max_value=10, value=3, step=1
             )
             flag_mmr = st.toggle(
                 "Diversity search",
                 value=True,
-                help="Diversity search, i.e., Maximal Marginal Relevance (MMR) tries to reduce redundancy of fetched documents and increase diversity. 0 being the most diverse, 1 being the least diverse. 0.5 is a balanced state.",
+                help="Diversity search, i.e., 1 is the most relevant, 0 being the most diverse, 1 being the least diverse. 0.5 is a balanced state.",
             )
-            _lambda_mult = st.slider(
+            diversity = st.slider(
                 "Diversity parameter (lambda):",
                 min_value=0.0,
                 max_value=1.0,
-                value=0.5,
+                value=1.0,
                 step=0.25,
             )
-            flag_similarity_out = st.toggle(
+            flag_similarity_score = st.toggle(
                 "Output similarity score",
                 value=False,
-                help="The retrieval process may become slower due to the cosine similarity calculations. A similarity score of 100% indicates the highest level of similarity between the query and the retrieved chunk.",
+                help="A similarity score of 1 indicates the highest level of similarity between the query and the retrieved chunk.",
             )
+
+    with tab2:
+        if selected_document:
+            st.write(f"### Viewing: {selected_document}")
+
+            pdf_path = 'json/'+ selected_collection +'/' + selected_document + ".pdf"
+
+            # Display PDF using Streamlit
+            with open(pdf_path, "rb") as pdf_file:
+                base64_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
+
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+
+        else:
+            st.warning("Please select a document to view.")
+
+    with tab1:
+
+
+        # Initialize session state for conversation history
+        if 'messages' not in st.session_state:
+            st.session_state.messages = []
+
+        # User input for the query
+        user_input = st.chat_input("Ask me anything about the indexed documents!")
+
+        if user_input:
+            # Add the user input to the conversation history
+            st.session_state.messages.append({"role": "user", "content": user_input})
+
+            query_params = {
+                "query_embeddings": cf.generate_query_embeddings(user_input),
+                "pdf_name": selected_document,
+                "document_collection_name": selected_collection,
+                "diversity": diversity,
+                "top_n": top_n
+            }
+
+
+
+            # Retrieve top results based on the query embeddings
+            results = cf.query_vector_dict(vector_dict, query_params)
+
+            # Construct the prompt for the LLM
+            prompt = f"""
+                        Query: " {user_input} "
+    
+                        Top results:
+                            {results['documents']}
+                            
+                        Please mention the Metadata below:
+                            {results['metadata']}
+                        
+                        If the context does not provide enough information, reply by saying : 
+                        'Please note that the current sources available to RAG are limited to indexed PDFs, so there may not be specific information related to your query. Apologies'  
+                    """
+
+            try:
+                # Make the request to OpenAI to get the response
+                reply = OpenAI().chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "developer", "content": "You are a helpful assistant"},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+
+                # Display the response
+                assistant_reply = reply.choices[0].message.content
+                st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+
+                st.write(results)
+
+            except Exception as e:
+                st.session_state.messages.append({"role": "assistant", "content": f"Error generating response: {e}"})
+        # Display chat history
+        for message in st.session_state.messages:
+            if message['role'] == "user":
+                st.chat_message("user").markdown(message['content'])
+            else:
+                st.chat_message("assistant").markdown(message['content'])
 
 """
 
 Developed by DSE Lab, Michigan State University
-
 """
-
-
-
-
-
-
