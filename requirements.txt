@@ -8,3 +8,5 @@ pathlib
 
 ipython  # For display, Markdown, Latex functionalities
 python-dotenv
+langchain
+langchain-schema
