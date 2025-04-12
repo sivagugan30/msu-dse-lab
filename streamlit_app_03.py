@@ -5,6 +5,7 @@ import zipfile
 from io import BytesIO
 import base64
 from openai import OpenAI
+from streamlit_pdf_viewer import pdf_viewer
 
 from default.config import (
     document_list,
@@ -259,14 +260,9 @@ if page == 'Chatbot':
             pdf_path = f'json/{selection_collection_placeholder}/{selected_document}.pdf'
 
             try:
-                with open(pdf_path, "rb") as pdf_file:
-                    base64_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
-
-                pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
-                st.markdown(pdf_display, unsafe_allow_html=True)
-
-            except FileNotFoundError:
-                st.error(f"🚫 PDF file not found: `{pdf_path}`")
+                pdf_viewer(pdf_path)
+            except Exception as e:
+                st.error(f"🚫 Could not load PDF: `{pdf_path}`\n\n**Error:** {e}")
 
         else:
             st.warning("Please select a document to view.")
