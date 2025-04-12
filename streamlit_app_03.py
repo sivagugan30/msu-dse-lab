@@ -194,17 +194,23 @@ if page == 'Chatbot':
     # load the json files
     vector_dict = cf.load_json_files(json_files)
 
-    doc_list  = cf.get_dict_list(vector_dict)
+    collection_list, doc_list  = cf.get_dict_list(vector_dict)
+
     with st.sidebar:
         selected_collection = st.selectbox(
             "Select your document collection",
-            [*doc_list.keys()]
+            ['All'] + [*collection_list.keys()]
         )
 
         if selected_collection != 'All':
             selected_document = st.selectbox(
                 "Select your document",
-                doc_list[selected_collection]
+                ['All'] + collection_list[selected_collection]
+            )
+        else:
+            selected_document = st.selectbox(
+                "Select your document",
+                ['All'] + doc_list
             )
 
         with st.expander("⚙️ RAG Parameters"):
@@ -230,7 +236,8 @@ if page == 'Chatbot':
             )
 
     with tab2:
-        if selected_document:
+        if selected_document is not None and selected_document != 'All':
+
             st.write(f"### Viewing: {selected_document}")
 
             pdf_path = 'json/'+ selected_collection +'/' + selected_document + ".pdf"
@@ -247,7 +254,6 @@ if page == 'Chatbot':
 
     with tab1:
 
-
         # Initialize session state for conversation history
         if 'messages' not in st.session_state:
             st.session_state.messages = []
@@ -261,8 +267,8 @@ if page == 'Chatbot':
 
             query_params = {
                 "query_embeddings": cf.generate_query_embeddings(user_input),
-                "pdf_name": selected_document,
-                "document_collection_name": selected_collection,
+                "pdf_name": None if selected_document == 'All' else selected_document,
+                "document_collection_name": None if selected_collection == 'All' else selected_collection,
                 "diversity": diversity,
                 "top_n": top_n
             }

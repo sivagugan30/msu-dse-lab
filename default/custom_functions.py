@@ -124,6 +124,7 @@ def query_vector_dict(vector_dict, query_params):
 
 def get_dict_list(vector_dict):
     result_dict = {}
+    doc_list = []
 
     for metadata in vector_dict['metadata']:
         collection_name = metadata['document_collection_name']
@@ -135,74 +136,10 @@ def get_dict_list(vector_dict):
         if pdf_name not in result_dict[collection_name]:
             result_dict[collection_name].append(pdf_name)
 
-    return result_dict
+        if pdf_name not in doc_list:
+            doc_list.append(pdf_name)
 
-def query_vector_dict2(vector_dict, query_texts=None, query_embeddings=None, n_results=3, where=None,
-                      where_document=None, include=["metadatas", "documents", "distances"]):
-    """
-    Query the vector_dict to find the closest neighbors.
-    """
-    ids = vector_dict["ids"]
-    documents = vector_dict["documents"]
-    metadata = vector_dict["metadata"]
-    embeddings = vector_dict["embeddings"]
-
-    # Function to filter metadata or documents based on where conditions
-    def apply_filter(data, filter_condition):
-        if filter_condition is None:
-            return data
-        filtered_data = []
-        for item in data:
-            if all(item.get(key) == value for key, value in filter_condition.items()):
-                filtered_data.append(item)
-        return filtered_data
-
-    # Apply the `where` and `where_document` filters
-    if where:
-        metadata = apply_filter(metadata, where)
-    if where_document:
-        documents = apply_filter(documents, where_document)
-
-    # Ensure we also filter embeddings and ids based on the metadata or documents filter
-    # We need to ensure the filtered metadata is indexed correctly
-    filtered_metadata = [metadata[i] for i in range(len(metadata)) if metadata[i] in metadata]
-    filtered_ids = [ids[i] for i in range(len(ids)) if metadata[i] in filtered_metadata]
-    filtered_documents = [documents[i] for i in range(len(documents)) if metadata[i] in filtered_metadata]
-    filtered_embeddings = [embeddings[i] for i in range(len(embeddings)) if metadata[i] in filtered_metadata]
-
-    # Calculate the cosine similarity for query_embeddings or query_texts
-    if query_embeddings is not None:
-        similarities = cosine_similarity(query_embeddings, filtered_embeddings)
-    elif query_texts is not None:
-        # Generate embeddings for the query_texts
-        query_embeddings = generate_embeddings(query_texts)
-        similarities = cosine_similarity(query_embeddings, filtered_embeddings)
-    else:
-        raise ValueError("Either query_embeddings or query_texts must be provided.")
-
-    # Get the closest neighbors (sorted by descending similarity)
-    closest_indices = np.argsort(similarities, axis=1)[:, ::-1][:, :n_results]
-
-    # Prepare the results
-    results = {
-        "ids": [filtered_ids[i] for i in closest_indices.flatten()],
-        "documents": [filtered_documents[i] for i in closest_indices.flatten()],
-        "metadata": [filtered_metadata[i] for i in closest_indices.flatten()],
-        "distances": [similarities[0, i] for i in closest_indices.flatten()]
-    }
-
-    # Include only the specified fields
-    filtered_results = {}
-    if "embeddings" in include:
-        filtered_results["embeddings"] = [filtered_embeddings[i] for i in closest_indices.flatten()]
-    if "metadatas" in include:
-        filtered_results["metadata"] = [filtered_metadata[i] for i in closest_indices.flatten()]
-    if "documents" in include:
-        filtered_results["documents"] = [filtered_documents[i] for i in closest_indices.flatten()]
-    if "distances" in include:
-        filtered_results["distances"] = [similarities[0, i] for i in closest_indices.flatten()]
-
-    return filtered_results
+    return result_dict, doc_list
 
 
 def load_documents(directory):
