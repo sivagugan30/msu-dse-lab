@@ -196,6 +196,9 @@ if page == 'Chatbot':
 
     collection_list, doc_list  = cf.get_dict_list(vector_dict)
 
+    collection_list = ['All'] + collection_list
+    doc_list = ['All'] + doc_list
+
     with st.sidebar:
         selected_collection = st.selectbox(
             "Select your document collection",
