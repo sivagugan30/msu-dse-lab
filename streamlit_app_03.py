@@ -199,6 +199,13 @@ if page == 'Chatbot':
     collection_list = ['All'] + [*collection_dict.keys()]
     doc_list = ['All'] + doc_list
 
+    # Fast reverse lookup dictionary (for large datasets)
+    document_to_collection = {
+        doc: collection
+        for collection, docs in collection_dict.items()
+        for doc in docs
+    }
+
     with st.sidebar:
         selected_collection = st.selectbox(
             "Select your document collection",
@@ -239,28 +246,27 @@ if page == 'Chatbot':
             )
 
     with tab2:
-        if selected_document is not None and selected_document != 'All':
+        if selected_document and selected_document != 'All':
 
-            selection_collection_placeholder = None
-
+            # Fast lookup of which collection the doc belongs to
             if selected_collection == 'All':
-                for key in collection_dict:
-                    if selected_document in collection_dict[key]:
-                        selection_collection_placeholder = key
-                        break
+                selection_collection_placeholder = document_to_collection.get(selected_document)
             else:
                 selection_collection_placeholder = selected_collection
 
             st.write(f"### Viewing: {selected_document}")
 
-            pdf_path = 'json/'+ selection_collection_placeholder +'/' + selected_document + ".pdf"
+            pdf_path = f'json/{selection_collection_placeholder}/{selected_document}.pdf'
 
-            # Display PDF using Streamlit
-            with open(pdf_path, "rb") as pdf_file:
-                base64_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
+            try:
+                with open(pdf_path, "rb") as pdf_file:
+                    base64_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
 
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
+                pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
+                st.markdown(pdf_display, unsafe_allow_html=True)
+
+            except FileNotFoundError:
+                st.error(f"🚫 PDF file not found: `{pdf_path}`")
 
         else:
             st.warning("Please select a document to view.")
