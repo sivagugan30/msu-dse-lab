@@ -208,12 +208,12 @@ if page == 'Chatbot':
         if selected_collection != 'All':
             selected_document = st.selectbox(
                 "Select your document",
-                ['All'] + collection_list[selected_collection]
+                ['All'] + collection_dict[selected_collection]
             )
         else:
             selected_document = st.selectbox(
                 "Select your document",
-                ['All'] + doc_list
+                doc_list
             )
 
         with st.expander("⚙️ RAG Parameters"):
@@ -241,9 +241,19 @@ if page == 'Chatbot':
     with tab2:
         if selected_document is not None and selected_document != 'All':
 
+            selection_collection_placeholder = None
+
+            if selected_collection == 'All':
+                for key in collection_dict:
+                    if selected_document in collection_dict[key]:
+                        selection_collection_placeholder = key
+                        break
+            else:
+                selection_collection_placeholder = selected_collection
+
             st.write(f"### Viewing: {selected_document}")
 
-            pdf_path = 'json/'+ selected_collection +'/' + selected_document + ".pdf"
+            pdf_path = 'json/'+ selection_collection_placeholder +'/' + selected_document + ".pdf"
 
             # Display PDF using Streamlit
             with open(pdf_path, "rb") as pdf_file:
