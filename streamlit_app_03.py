@@ -194,15 +194,15 @@ if page == 'Chatbot':
     # load the json files
     vector_dict = cf.load_json_files(json_files)
 
-    collection_list, doc_list  = cf.get_dict_list(vector_dict)
+    collection_dict, doc_list  = cf.get_dict_list(vector_dict)
 
-    collection_list = ['All'] + collection_list
+    collection_list = ['All'] + [*collection_dict.keys()]
     doc_list = ['All'] + doc_list
 
     with st.sidebar:
         selected_collection = st.selectbox(
             "Select your document collection",
-            ['All'] + [*collection_list.keys()]
+            collection_list
         )
 
         if selected_collection != 'All':
