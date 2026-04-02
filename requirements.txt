@@ -8,7 +8,7 @@ pathlib
 
 ipython  # For display, Markdown, Latex functionalities
 python-dotenv
-langchain
-#langchain.schema
+langchain-core
+langchain-text-splitters
 
 streamlit_pdf_viewer
